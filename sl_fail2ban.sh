@@ -1,8 +1,12 @@
-clear
+
+
+
+## This Script Originated from https://github.com/FunctionClub/Fail2ban
+## Modifying for Post Script(auto installation) to Linux Servers 
+
+#clear
 #CheckIfRoot
 #[ $(id -u) != "0" ] && { echo "${CFAILURE}Error: You must be root to run this script${CEND}"; exit 1; }
-
-
 #ReadSSHPort
 #[ -z "`grep ^Port /etc/ssh/sshd_config`" ] && ssh_port=22 || ssh_port=`grep ^Port /etc/ssh/sshd_config | awk '{print $2}'`
 
@@ -79,16 +83,25 @@ fi
 #    echo "${CWARNING}Input error! Please only input y or n!${CEND}"
 #  fi
 #done
-#ssh_port=$SSH_PORT
+
+## SSH 접속 포트 
+ssh_port=22
+
 #echo ""
 #	read -p "Input the maximun times for trying [2-10]:  " maxretry
 #echo ""
 #read -p "Input the lasting time for blocking a IP [hours]:  " bantime
 #if [ ${maxretry} == '' ]; then
-#	maxretry=3
+
+## SSH 접속 로그인 시도 횟수 임계치
+maxretry=6
+
 #fi
 #if [ ${bantime} == '' ];then
-	bantime=24
+
+## 접속 차단 유지 시간(단위:), 1시간 = 3600, 24시간 = 86400 
+bantime=3600
+
 #fi
 #((bantime=$bantime*60*60))
 #Install
@@ -109,11 +122,10 @@ if [ ${OS} == CentOS ]; then
 cat <<EOF >> /etc/fail2ban/jail.local
 [DEFAULT]
 ignoreip = 127.0.0.1
-bantime = 86400
-maxretry = 3
+bantime = $bantime
+maxretry = $maxretry
 findtime = 1800
 [ssh-iptables]
-ssh_port = 22
 enabled = true
 filter = sshd
 action = iptables[name=SSH, port=ssh, protocol=tcp]
@@ -126,17 +138,17 @@ else
 cat <<EOF >> /etc/fail2ban/jail.local
 [DEFAULT]
 ignoreip = 127.0.0.1
-bantime = 86400
-maxretry = 3
+bantime = $bantime
+maxretry = $maxretry
 findtime = 1800
 [ssh-iptables]
 enabled = true
 filter = sshd
 action = iptables[name=SSH, port=ssh, protocol=tcp]
 logpath = /var/log/auth.log
-maxretry = 3
+maxretry = $maxretry
 findtime = 3600
-bantime = 86400
+bantime = $bantime
 EOF
 fi
 
